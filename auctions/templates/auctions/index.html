@@ -1,7 +1,42 @@
 {% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block ccs_additional %}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+          integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'auctions/index.css' %}">
+{% endblock %}
+
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <div class="row">
+        <div class="sidebar col-lg-2 col-md-3">
+            <h2>Categories</h2>
+            <ul>
+                <li>Books</li>
+                <li>Fashion</li>
 
-    TODO
+            </ul>
+            {#                <form action="/search">#}
+            {#                    <input class="search" type="text" name="q" required placeholder="Search Encyclopedia">#}
+            {#                </form>#}
+            {#                <div>#}
+            {#                    <a href="{% url 'index' %}" style="color: black">Home</a>#}
+            {#                </div>#}
+            {#                <div>#}
+            {#                    <a href="{% url 'new_page' %}" style="color: black">Create New Page</a>#}
+            {#                </div>#}
+            {#                <div>#}
+            {#                    <a href="{% url 'randomizer' %}" style="color: black">Random Page</a>#}
+            {#                </div>#}
+        </div>
+        <div class="place"></div>
+        <div class="main_c col-lg-10 col-md-9">
+            <h2>Active Listings</h2>
+            TODO
+        </div>
+    </div>
+
+
+
 {% endblock %}

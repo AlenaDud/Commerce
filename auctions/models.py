@@ -15,20 +15,20 @@ class Category(models.Model):
 class Listing(models.Model):
     name = models.CharField(max_length=60)
     detail = models.TextField(blank=True)
-    start_price = models.DecimalField(decimal_places=2)
+    start_price = models.DecimalField(max_digits=19, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     is_active = models.BooleanField(default=True)
     date_of_create = models.DateField(auto_now=True)
     photo = models.ImageField(upload_to='listings/%Y/%m/%d/',
                               blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, default='unspecified')
-    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='win_user')
 
 
 class Bid(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE)
-    cost = models.DecimalField(decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    cost = models.DecimalField(max_digits=19, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
 
 
 class Comments(models.Model):
