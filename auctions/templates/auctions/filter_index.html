@@ -14,7 +14,7 @@
             <h2>Categories</h2>
             <ul>
                 {% for cat in categories %}
-                <li><a href="{% url 'filtered_index' cat.id %}">{{cat.name}}</a></li>
+                <li style="text-decoration: none"><a href="{% url 'filtered_index' cat.id %}">{{cat.name}}</a></li>
                 {% endfor %}
             </ul>
 
@@ -37,6 +37,7 @@
                 {% endfor %}
             </div>
         </div>
+
 
     </div>
 

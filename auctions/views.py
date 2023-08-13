@@ -5,8 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from .forms import ListingForm
 from django.views.generic import FormView, TemplateView, ListView, DetailView
-from .models import User, Listing
-
+from .models import User, Listing, Category
 
 
 class IndexListView(ListView):
@@ -18,10 +17,26 @@ class IndexListView(ListView):
         queryset = super().get_queryset()
         return queryset.filter(is_active=True).order_by('date_of_create')
 
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'categories': Category.objects.all()})
+        return context
 
-class ListingDetailView(DetailView):
-    template_name = 'auctions/listing.html'
+
+class IndexFilteredListView(ListView):
+    template_name = 'auctions/filter_index.html'
     model = Listing
+    context_object_name = 'listings'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        cat = self.kwargs['category_id']
+        return queryset.filter(is_active=True).filter(category=cat).order_by('date_of_create')
+
+    def get_context_data(self, *, object_list=None, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({'categories': Category.objects.all()})
+        return context
 
 
 def login_view(request):
@@ -90,3 +105,9 @@ class CreateListingView(FormView):
 
 class CreateListingDoneView(TemplateView):
     template_name = 'auctions/create_done.html'
+
+
+class ListingDetailView(DetailView):
+    template_name = 'auctions/listing.html'
+    model = Listing
+
