@@ -3,12 +3,25 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from .forms import ListingForm
+from django.views.generic import FormView, TemplateView, ListView, DetailView
+from .models import User, Listing
 
-from .models import User
 
 
-def index(request):
-    return render(request, "auctions/index.html")
+class IndexListView(ListView):
+    template_name = 'auctions/index.html'
+    model = Listing
+    context_object_name = 'listings'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(is_active=True).order_by('date_of_create')
+
+
+class ListingDetailView(DetailView):
+    template_name = 'auctions/listing.html'
+    model = Listing
 
 
 def login_view(request):
@@ -61,3 +74,19 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+
+class CreateListingView(FormView):
+    form_class = ListingForm
+    template_name = 'auctions/create_listing.html'
+    success_url = '/create-listing/successful'
+
+    def form_valid(self, form):
+        post = form.save(commit=False)
+        post.user = self.request.user
+        post.save()
+        return super().form_valid(post)
+
+
+class CreateListingDoneView(TemplateView):
+    template_name = 'auctions/create_done.html'

@@ -11,6 +11,9 @@ class User(AbstractUser):
 class Category(models.Model):
     name = models.CharField(max_length=60)
 
+    def __str__(self):
+        return f'{self.name}'
+
 
 class Listing(models.Model):
     name = models.CharField(max_length=60)
@@ -18,11 +21,12 @@ class Listing(models.Model):
     start_price = models.DecimalField(max_digits=19, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
     is_active = models.BooleanField(default=True)
     date_of_create = models.DateField(auto_now=True)
-    photo = models.ImageField(upload_to='listings/%Y/%m/%d/',
-                              blank=True)
+    # photo = models.ImageField(upload_to='listings/%Y/%m/%d/',
+    #                           blank=True)
+    photo = models.URLField(blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner')
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='win_user')
+    winner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='win_user', blank=True)
 
 
 class Bid(models.Model):

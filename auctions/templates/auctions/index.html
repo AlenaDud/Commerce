@@ -17,26 +17,28 @@
                 <li>Fashion</li>
 
             </ul>
-            {#                <form action="/search">#}
-            {#                    <input class="search" type="text" name="q" required placeholder="Search Encyclopedia">#}
-            {#                </form>#}
-            {#                <div>#}
-            {#                    <a href="{% url 'index' %}" style="color: black">Home</a>#}
-            {#                </div>#}
-            {#                <div>#}
-            {#                    <a href="{% url 'new_page' %}" style="color: black">Create New Page</a>#}
-            {#                </div>#}
-            {#                <div>#}
-            {#                    <a href="{% url 'randomizer' %}" style="color: black">Random Page</a>#}
-            {#                </div>#}
+
         </div>
         <div class="place"></div>
         <div class="main_c col-lg-10 col-md-9">
             <h2>Active Listings</h2>
-            TODO
+            <div class="card-group">
+                {% for card in  listings %}
+                    <a href="{% url 'listing_detail' card.pk %}">
+                        <div class="card">
+                            <img class="card-img-top" src="{{ card.photo }}" alt="Card image cap">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ card.name }}</h5>
+                                <p class="card-text">{{ card.detail|truncatechars:75 }}</p>
+                                <p class="card-text"><small class="text-muted">{{ card.date_of_create }}</small></p>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
         </div>
+
+
     </div>
-
-
 
 {% endblock %}
