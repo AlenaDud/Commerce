@@ -7,7 +7,9 @@ from .forms import ListingForm, BidForms, CommentsForm
 from django.views import View
 from django.db.models import Max
 from django.views.generic import FormView, TemplateView, ListView, DetailView
-from .models import User, Listing, Category, Bid, Comments
+from .models import User, Listing, Category, Bid, Comments, Watchlist
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
 from django.forms import ValidationError
 from decimal import Decimal
 
@@ -18,7 +20,8 @@ class IndexListView(ListView):
     context_object_name = 'listings'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().annotate(maximum=Max('bid__cost'))
+
         return queryset.filter(is_active=True).order_by('date_of_create')
 
     def get_context_data(self, *, object_list=None, **kwargs):
@@ -33,7 +36,7 @@ class IndexFilteredListView(ListView):
     context_object_name = 'listings'
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().annotate(maximum=Max('bid__cost'))
         cat = self.kwargs['category_id']
         return queryset.filter(is_active=True).filter(category=cat).order_by('date_of_create')
 
@@ -100,6 +103,7 @@ class CreateListingView(FormView):
     template_name = 'auctions/create_listing.html'
     success_url = '/create-listing/successful'
 
+    @method_decorator(login_required)
     def form_valid(self, form):
         post = form.save(commit=False)
         post.user = self.request.user
@@ -114,27 +118,33 @@ class CreateListingDoneView(TemplateView):
 class ListingDetailView(View):
     def get(self, request, listing_id):
         current_listing = Listing.objects.get(id=self.kwargs['listing_id'])  # mb use select_related
-        current_max_bid = Bid.objects.filter(listing_id=self.kwargs['listing_id']).aggregate(Max('cost'))['cost__max']
+        current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
         if current_max_bid is None:
             current_max_bid = current_listing.start_price
 
         bid_form = BidForms()
+        if request.user.is_authenticated:
+            watchlist_flag = Watchlist.objects.filter(user=self.request.user, listing_id=listing_id).exists()
+        else:
+            watchlist_flag = None
         comment_form = CommentsForm()
         comment_for_listing = Comments.objects.filter(listing_id=self.kwargs['listing_id'])
 
         return render(request, 'auctions/listing.html',
                       context={'listing': current_listing, 'max_bid': current_max_bid,
                                'bid_form': bid_form, 'comment_form': comment_form,
-                               'comments': comment_for_listing})
+                               'comments': comment_for_listing, 'watchlist_flag': watchlist_flag})
 
+    @method_decorator(login_required)
     def post(self, request, listing_id):
         current_listing = Listing.objects.get(id=self.kwargs['listing_id'])  # mb use select_related
-        current_max_bid = Bid.objects.filter(listing_id=self.kwargs['listing_id']).aggregate(Max('cost'))['cost__max']
+        current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
         if current_max_bid is None:
             current_max_bid = current_listing.start_price
 
         bid_form = BidForms(request.POST)
         comment_form = CommentsForm(request.POST)
+        watchlist_flag = Watchlist.objects.filter(user=self.request.user, listing_id=listing_id).exists()
         comment_for_listing = Comments.objects.filter(listing_id=self.kwargs['listing_id'])
 
         if bid_form.is_valid():
@@ -144,7 +154,7 @@ class ListingDetailView(View):
                 return render(request, 'auctions/listing.html',
                               context={'listing': current_listing, 'max_bid': current_max_bid,
                                        'bid_form': bid_form, 'message': message, 'comment_form': comment_form,
-                                       'comments': comment_for_listing})
+                                       'comments': comment_for_listing, 'watchlist_flag': watchlist_flag})
             else:
                 bid.user = self.request.user
                 bid.listing = current_listing
@@ -156,8 +166,24 @@ class ListingDetailView(View):
             comment.listing = current_listing
             comment.save()
             return HttpResponseRedirect(reverse('listing_detail', args=(self.kwargs['listing_id'],)))
+
         return render(request, 'auctions/listing.html',
                       context={'listing': current_listing, 'max_bid': current_max_bid,
                                'bid_form': bid_form, 'comment_form': comment_form,
-                               'comments': comment_for_listing})
+                               'comments': comment_for_listing, 'watchlist_flag': watchlist_flag})
 
+
+@login_required
+def watchlist(request, listing_id):
+    if request.POST['del_or_add'] == 'Add to watchlist':
+        Watchlist.objects.create(user_id=request.user.id,
+                                 listing_id=listing_id)
+        return HttpResponseRedirect(reverse('listing_detail', args=(listing_id,)))
+    else:
+        Watchlist.objects.get(user_id=request.user.id, listing_id=listing_id).delete()
+        return HttpResponseRedirect(reverse('listing_detail', args=(listing_id,)))
+
+
+@login_required
+def detail_watchlist(request):
+    pass

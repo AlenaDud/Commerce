@@ -9,13 +9,24 @@
     <section class="flex_container">
         <div class="info_listing">
             <h2>Listing: {{ listing.name }}</h2>
-            <p></p>
+
+            {% if request.user.is_authenticated %}
+                <form method="post" action={% url "watchlist" listing.id %}>
+                    {% csrf_token %}
+                    {% if watchlist_flag  %}
+                        <input class="btn btn-primary" type="submit" value="Delete from watchlist" name="del_or_add">
+                    {% else %}
+                        <input class="btn btn-primary" type="submit" value="Add to watchlist" name="del_or_add">
+                    {% endif %}
+                </form>
+            {% endif %}
+
             <img class="img-fluid" src="{{ listing.photo }}" alt="Responsive image">
             <p>{{ listing.detail }}</p>
         </div>
 
         <div class="info_bid">
-            <p>${{ max_bid }}</p>
+            <p>${{ max_bid|floatformat:2 }}</p>
             <form method="post">
                 {% csrf_token %}
                 {{ message }}
@@ -50,7 +61,6 @@
                     <hr>
                 {% empty %}
                     <p>No comments yet...</p>
-
                 {% endfor %}
             </div>
 

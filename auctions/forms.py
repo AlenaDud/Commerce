@@ -1,5 +1,5 @@
 from django import forms
-from .models import Listing, Comments, Bid
+from .models import Listing, Comments, Bid, Watchlist
 
 
 class ListingForm(forms.ModelForm):
@@ -23,3 +23,8 @@ class BidForms(forms.ModelForm):
     class Meta:
         model = Bid
         fields = ['cost']
+
+
+# class WatchlistForms(forms.ModelForm):
+#     class Meta:
+#         model = Watchlist

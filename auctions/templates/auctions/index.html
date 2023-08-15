@@ -30,6 +30,12 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ card.name }}</h5>
                                 <p class="card-text">{{ card.detail|truncatechars:75 }}</p>
+                                <p class="card-text">
+                                <p>{% if card.maximum %}
+                                        ${{ card.maximum|floatformat:2  }}
+                                    {% else %}
+                                        ${{ card.start_price }}
+                                    {% endif %} </p>
                                 <p class="card-text"><small class="text-muted">{{ card.date_of_create }}</small></p>
                             </div>
                         </div>
