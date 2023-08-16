@@ -1,0 +1,19 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block ccs_additional %}
+    <link rel="stylesheet" href="{% static 'auctions/listing.css' %}">
+{% endblock %}
+
+{% block body %}
+    <section class="flex_container">
+        <div class="info_listing">
+            <h2>Inactive listing</h2>
+            <br>
+            <p>{{ message }}</p>
+
+
+            <p></p>
+        </div>
+    </section>
+{% endblock %}

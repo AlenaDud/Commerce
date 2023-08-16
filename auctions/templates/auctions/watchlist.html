@@ -9,19 +9,8 @@
 
 
 {% block body %}
-    <div class="row">
-        <div class="sidebar col-lg-2 col-md-3">
-            <h2>Categories</h2>
-            <ul>
-                {% for cat in categories %}
-                <li><a href="{% url 'filtered_index' cat.id %}">{{cat.name}}</a></li>
-                {% endfor %}
-            </ul>
-
-        </div>
-        <div class="place"></div>
         <div class="main_c col-lg-10 col-md-9">
-            <h2>Active Listings</h2>
+            <h2>Watchlist</h2>
             <div class="card-columns">
                 {% for card in  listings %}
                     <a href="{% url 'listing_detail' card.pk %}">
@@ -44,6 +33,6 @@
             </div>
         </div>
 
-    </div>
+
 
 {% endblock %}

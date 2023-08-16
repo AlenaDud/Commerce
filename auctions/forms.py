@@ -8,7 +8,7 @@ class ListingForm(forms.ModelForm):
         exclude = ['is_active', 'date_of_create', 'user', 'winner']
         labels = {'name': 'Title',
                   'detail': 'Description',
-                  'start_price': 'Starting price',
+                  'start_price': 'Starting price in USD',
                   'photo': 'URL of image',
                   'category': 'Category'}
 
@@ -25,6 +25,3 @@ class BidForms(forms.ModelForm):
         fields = ['cost']
 
 
-# class WatchlistForms(forms.ModelForm):
-#     class Meta:
-#         model = Watchlist

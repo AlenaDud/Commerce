@@ -36,7 +36,14 @@
                 <input class="btn btn-primary" type="submit" value="Place Bid" name="add_bid">
             </form>
         </div>
-
+    <div class="add_winner">
+            {% if request.user == listing.user %}
+                <form method="post" action={% url "closing" listing.id %}>
+                    {% csrf_token %}
+                        <input class="btn btn-primary" type="submit" value="Close">
+                </form>
+            {% endif %}
+    </div>
         <div class="detail_listing">
             <ul>
                 <li> Listed by: {{ listing.user.username }}</li>

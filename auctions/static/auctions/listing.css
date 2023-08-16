@@ -7,3 +7,7 @@
  display: inline-block;
  height: 30%;
 }
+
+.img-fluid {
+ display: inline-block;
+}

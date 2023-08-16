@@ -117,7 +117,9 @@ class CreateListingDoneView(TemplateView):
 
 class ListingDetailView(View):
     def get(self, request, listing_id):
-        current_listing = Listing.objects.get(id=self.kwargs['listing_id'])  # mb use select_related
+        current_listing = Listing.objects.get(id=listing_id)  # mb use select_related
+        if not current_listing.is_active:
+            return HttpResponseRedirect(reverse('not_active', args=(listing_id, )))
         current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
         if current_max_bid is None:
             current_max_bid = current_listing.start_price
@@ -128,7 +130,7 @@ class ListingDetailView(View):
         else:
             watchlist_flag = None
         comment_form = CommentsForm()
-        comment_for_listing = Comments.objects.filter(listing_id=self.kwargs['listing_id'])
+        comment_for_listing = Comments.objects.filter(listing_id=listing_id)
 
         return render(request, 'auctions/listing.html',
                       context={'listing': current_listing, 'max_bid': current_max_bid,
@@ -137,7 +139,7 @@ class ListingDetailView(View):
 
     @method_decorator(login_required)
     def post(self, request, listing_id):
-        current_listing = Listing.objects.get(id=self.kwargs['listing_id'])  # mb use select_related
+        current_listing = Listing.objects.get(listing_id)  # mb use select_related
         current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
         if current_max_bid is None:
             current_max_bid = current_listing.start_price
@@ -145,7 +147,7 @@ class ListingDetailView(View):
         bid_form = BidForms(request.POST)
         comment_form = CommentsForm(request.POST)
         watchlist_flag = Watchlist.objects.filter(user=self.request.user, listing_id=listing_id).exists()
-        comment_for_listing = Comments.objects.filter(listing_id=self.kwargs['listing_id'])
+        comment_for_listing = Comments.objects.filter(listing_id=listing_id)
 
         if bid_form.is_valid():
             bid = bid_form.save(commit=False)
@@ -159,13 +161,13 @@ class ListingDetailView(View):
                 bid.user = self.request.user
                 bid.listing = current_listing
                 bid.save()
-                return HttpResponseRedirect(reverse('listing_detail', args=(self.kwargs['listing_id'],)))
+                return HttpResponseRedirect(reverse('listing_detail', args=(listing_id,)))
         if comment_form.is_valid():
             comment = comment_form.save(commit=False)
             comment.user = self.request.user
             comment.listing = current_listing
             comment.save()
-            return HttpResponseRedirect(reverse('listing_detail', args=(self.kwargs['listing_id'],)))
+            return HttpResponseRedirect(reverse('listing_detail', args=(listing_id,)))
 
         return render(request, 'auctions/listing.html',
                       context={'listing': current_listing, 'max_bid': current_max_bid,
@@ -184,6 +186,34 @@ def watchlist(request, listing_id):
         return HttpResponseRedirect(reverse('listing_detail', args=(listing_id,)))
 
 
-@login_required
-def detail_watchlist(request):
-    pass
+class WatchlistView(View):
+    @method_decorator(login_required)
+    def get(self, request):
+        listings = Listing.objects.filter(watchlist__user=request.user)
+        return render(request, 'auctions/watchlist.html', context={'listings': listings})
+
+
+def not_active(request, listing_id):
+    current_listing = Listing.objects.get(id=listing_id)
+    if request.user == current_listing.user:
+        message = f'Thanks you for posting. Listing - "{current_listing.name}" was sold to {current_listing.winner.username}'
+    elif request.user == current_listing.winner:
+        message = f'The owner has closed the auction for "{current_listing.name}". Congratulation you win!'
+    else:
+        message = f'The owner has closed the auction for "{current_listing.name}".'
+    return render(request, 'auctions/not_active.html', context={'message': message})
+
+
+def closing(request, listing_id):
+    current_listing = Listing.objects.get(id=listing_id)
+    if current_listing.user == request.user:
+        current_listing.is_active = False
+        max_bid = Bid.objects.filter(listing=listing_id).values('user_id').annotate(Max('cost'))
+        current_listing.winner = User.objects.get(id=max_bid[0]['user_id'])
+        current_listing.save()
+        price = max_bid[0]['cost__max']
+        return render(request, 'auctions/not_active.html', context={'listings': current_listing,
+                                                                    'price': price})
+
+
+
