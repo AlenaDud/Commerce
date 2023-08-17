@@ -17,7 +17,7 @@
 
 .nav {
     position: absolute;
-    right:40%;
+    right: 35%;
     text-align: center;
     padding-bottom: 10px;
     height: 15vh;
@@ -39,4 +39,53 @@
 
 .nav-item:hover {
     transform: scale(1.2);
+}
+.cont {
+    margin-left: 5vw;
+}
+
+h3 {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.add_comment  {
+    margin-top: 20px;
+    margin-left: 5vw;
+    display: flex;
+
+}
+
+.add_comment div, form {
+    display: inline-block;
+}
+
+
+.add_comment form {
+    display: inline-block;
+}
+
+.add_comment textarea {
+    margin-left: 10px;
+    width: 70vw;
+    height: 13vh;
+    margin-bottom:  2vh;
+}
+
+.bi {
+    margin-left: 1vw;
+    margin-bottom: 1vh;
+}
+
+.user-info . {
+    margin-left: 2vw;
+    margin-top: 4vh;
+}
+
+.all_comment {
+    margin-top: 4vh;
+}
+
+#username_field {
+    text-align: center;
 }

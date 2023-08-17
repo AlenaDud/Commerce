@@ -8,57 +8,85 @@
 {% block body %}
     <section class="flex_container">
         <div class="info_listing">
-            <h2>Listing: {{ listing.name }}</h2>
+            <div class="top-list">
 
-            {% if request.user.is_authenticated %}
-                <form method="post" action={% url "watchlist" listing.id %}>
-                    {% csrf_token %}
-                    {% if watchlist_flag  %}
-                        <input class="btn btn-primary" type="submit" value="Delete from watchlist" name="del_or_add">
-                    {% else %}
-                        <input class="btn btn-primary" type="submit" value="Add to watchlist" name="del_or_add">
-                    {% endif %}
-                </form>
-            {% endif %}
+                <h2>Listing: {{ listing.name }}</h2>
 
-            <img class="img-fluid" src="{{ listing.photo }}" alt="Responsive image">
-            <p>{{ listing.detail }}</p>
+                {% if request.user.is_authenticated %}
+                    <form method="post" action={% url "watchlist" listing.id %}>
+                        {% csrf_token %}
+                        {% if watchlist_flag %}
+                            <input class="btn btn-dark" type="submit" value="Delete from watchlist" name="del_or_add">
+                        {% else %}
+                            <input class="btn btn-dark" type="submit" value="Add to watchlist" name="del_or_add">
+                        {% endif %}
+                    </form>
+                {% endif %}
+            </div>
+            <div class="img-detail">
+                <div class="img-container">
+                    <img id="img_list" src="{{ listing.photo }}" alt="listing_image">
+                </div>
+
+                <div class="list-info">
+                    <p>{{ listing.detail }}</p>
+                    <div class="detail_listing">
+                        <ul>
+                            <li> Listed by: {{ listing.user.username }}</li>
+                            <li> Category: {{ listing.category.name }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="info_bid">
-            <p>${{ max_bid|floatformat:2 }}</p>
-            <form method="post">
-                {% csrf_token %}
-                {{ message }}
-                {{ bid_form.errors }}
-                {{ bid_form }}
-                <input type="hidden">
-                <input class="btn btn-primary" type="submit" value="Place Bid" name="add_bid">
-            </form>
-        </div>
-    <div class="add_winner">
-            {% if request.user == listing.user %}
-                <form method="post" action={% url "closing" listing.id %}>
-                    {% csrf_token %}
-                        <input class="btn btn-primary" type="submit" value="Close">
-                </form>
-            {% endif %}
-    </div>
-        <div class="detail_listing">
-            <ul>
-                <li> Listed by: {{ listing.user.username }}</li>
-                <li> Category: {{ listing.category.name }}</li>
-            </ul>
-        </div>
-
-        <section class="container">
-            <div class="add_comment">
+            <h2>${{ max_bid|floatformat:2 }}</h2>
+            <section class="bid_control">
                 <form method="post">
                     {% csrf_token %}
-                    {{ comment_form.errors }}
-                    {{ comment_form }}
-                    <input class="btn btn-primary" type="submit" value="Add comment" name="add_comment">
+                    <p style="color: red">{{ message }}</p>
+                    {% for field in bid_form %}
+                        {{ field.errors }}
+                        {{ field }}
+                    {% endfor %}
+                    <input type="hidden">
+                    <input class="btn btn-dark" type="submit" value="Place Bid" name="add_bid">
                 </form>
+                <div class="add_winner">
+                    {% if request.user == listing.user %}
+                        <form method="post" action={% url "closing" listing.id %}>
+                            {% csrf_token %}
+                            <input class="btn btn-dark" type="submit" value="Close">
+                        </form>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+        <br>
+        <h3> Commentaries </h3>
+
+        <section class="cont">
+            <div class="add_comment">
+                <div class="user-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor"
+                         class="bi bi-emoji-laughing" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M12.331 9.5a1 1 0 0 1 0 1A4.998 4.998 0 0 1 8 13a4.998 4.998 0 0 1-4.33-2.5A1 1 0 0 1 4.535 9h6.93a1 1 0 0 1 .866.5zM7 6.5c0 .828-.448 0-1 0s-1 .828-1 0S5.448 5 6 5s1 .672 1 1.5zm4 0c0 .828-.448 0-1 0s-1 .828-1 0S9.448 5 10 5s1 .672 1 1.5z"/>
+                    </svg>
+
+                    <p id="username_field"> {{ request.user.username|default:'Please login' }}</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in comment_form %}
+                        {{ field.errors }}
+                        {{ field }}
+                    {% endfor %}
+                    <br>
+                    <input class="btn btn-dark" type="submit" value="Add comment" name="add_comment">
+                </form>
+
             </div>
 
             <div class="all_comment">

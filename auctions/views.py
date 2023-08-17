@@ -139,8 +139,9 @@ class ListingDetailView(View):
 
     @method_decorator(login_required)
     def post(self, request, listing_id):
-        current_listing = Listing.objects.get(listing_id)  # mb use select_related
+        current_listing = Listing.objects.get(id=listing_id)  # mb use select_related
         current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
+        initial = not current_max_bid
         if current_max_bid is None:
             current_max_bid = current_listing.start_price
 
@@ -151,17 +152,18 @@ class ListingDetailView(View):
 
         if bid_form.is_valid():
             bid = bid_form.save(commit=False)
-            if bid.cost < current_max_bid:
-                message = 'The rate must be equal to or higher than the current one'
-                return render(request, 'auctions/listing.html',
-                              context={'listing': current_listing, 'max_bid': current_max_bid,
-                                       'bid_form': bid_form, 'message': message, 'comment_form': comment_form,
-                                       'comments': comment_for_listing, 'watchlist_flag': watchlist_flag})
-            else:
+            if (bid.cost > current_max_bid) or (bid.cost >= current_listing.start_price and initial):
                 bid.user = self.request.user
                 bid.listing = current_listing
                 bid.save()
                 return HttpResponseRedirect(reverse('listing_detail', args=(listing_id,)))
+            else:
+                message = 'The rate must be equal to or higher than start price or higher than the current one'
+                return render(request, 'auctions/listing.html',
+                              context={'listing': current_listing, 'max_bid': current_max_bid,
+                                       'bid_form': bid_form, 'message': message, 'comment_form': comment_form,
+                                       'comments': comment_for_listing, 'watchlist_flag': watchlist_flag})
+
         if comment_form.is_valid():
             comment = comment_form.save(commit=False)
             comment.user = self.request.user
@@ -189,7 +191,8 @@ def watchlist(request, listing_id):
 class WatchlistView(View):
     @method_decorator(login_required)
     def get(self, request):
-        listings = Listing.objects.filter(watchlist__user=request.user)
+
+        listings = Listing.objects.filter(watchlist__user=request.user).annotate(maximum=Max('bid__cost'))
         return render(request, 'auctions/watchlist.html', context={'listings': listings})
 
 
