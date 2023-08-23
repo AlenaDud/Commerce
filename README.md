@@ -16,8 +16,6 @@ First clone the repository from Github and switch to the new directory:
 
 `$ cd {{ project_name }}`
 
-Activate the virtualenv for your project.
-
 Install project dependencies:
 
 `$ pip install -r requirements.txt`
