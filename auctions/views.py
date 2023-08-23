@@ -1,17 +1,16 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
 from django.urls import reverse
 from .forms import ListingForm, BidForms, CommentsForm
 from django.views import View
 from django.db.models import Max
-from django.views.generic import FormView, TemplateView, ListView, DetailView
-from .models import User, Listing, Category, Bid, Comments, Watchlist
+from django.views.generic import FormView, TemplateView, ListView
+from .models import User, Listing, Category, Bid, Watchlist
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.forms import ValidationError
-from decimal import Decimal
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class IndexListView(ListView):
@@ -98,12 +97,11 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
-class CreateListingView(FormView):
+class CreateListingView(LoginRequiredMixin, FormView):
     form_class = ListingForm
     template_name = 'auctions/create_listing.html'
     success_url = '/create-listing/successful'
 
-    @method_decorator(login_required)
     def form_valid(self, form):
         post = form.save(commit=False)
         post.user = self.request.user
@@ -116,10 +114,10 @@ class CreateListingDoneView(TemplateView):
 
 
 class ListingDetailView(View):
-    def get(self, request, listing_id):
-        current_listing = Listing.objects.get(id=listing_id)  # mb use select_related
+    def get(self, request, listing_id: int):
+        current_listing = Listing.objects.select_related('category').get(id=listing_id)
         if not current_listing.is_active:
-            return HttpResponseRedirect(reverse('not_active', args=(listing_id, )))
+            return HttpResponseRedirect(reverse('not_active', args=(listing_id,)))
         current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
         if current_max_bid is None:
             current_max_bid = current_listing.start_price
@@ -130,7 +128,7 @@ class ListingDetailView(View):
         else:
             watchlist_flag = None
         comment_form = CommentsForm()
-        comment_for_listing = Comments.objects.filter(listing_id=listing_id)
+        comment_for_listing = current_listing.comments_set.all()
 
         return render(request, 'auctions/listing.html',
                       context={'listing': current_listing, 'max_bid': current_max_bid,
@@ -138,8 +136,8 @@ class ListingDetailView(View):
                                'comments': comment_for_listing, 'watchlist_flag': watchlist_flag})
 
     @method_decorator(login_required)
-    def post(self, request, listing_id):
-        current_listing = Listing.objects.get(id=listing_id)  # mb use select_related
+    def post(self, request, listing_id: int):
+        current_listing = Listing.objects.select_related('category', 'user').get(id=listing_id)  # mb use select_related
         current_max_bid = current_listing.bid_set.aggregate(Max('cost'))['cost__max']
         initial = not current_max_bid
         if current_max_bid is None:
@@ -148,7 +146,7 @@ class ListingDetailView(View):
         bid_form = BidForms(request.POST)
         comment_form = CommentsForm(request.POST)
         watchlist_flag = Watchlist.objects.filter(user=self.request.user, listing_id=listing_id).exists()
-        comment_for_listing = Comments.objects.filter(listing_id=listing_id)
+        comment_for_listing = current_listing.comments_set.all()
 
         if bid_form.is_valid():
             bid = bid_form.save(commit=False)
@@ -178,7 +176,7 @@ class ListingDetailView(View):
 
 
 @login_required
-def watchlist(request, listing_id):
+def watchlist(request, listing_id: int):
     if request.POST['del_or_add'] == 'Add to watchlist':
         Watchlist.objects.create(user_id=request.user.id,
                                  listing_id=listing_id)
@@ -191,12 +189,11 @@ def watchlist(request, listing_id):
 class WatchlistView(View):
     @method_decorator(login_required)
     def get(self, request):
-
         listings = Listing.objects.filter(watchlist__user=request.user).annotate(maximum=Max('bid__cost'))
         return render(request, 'auctions/watchlist.html', context={'listings': listings})
 
 
-def not_active(request, listing_id):
+def not_active(request, listing_id: int):
     current_listing = Listing.objects.get(id=listing_id)
     if request.user == current_listing.user:
         message = f'Thanks you for posting. Listing - "{current_listing.name}" was sold to {current_listing.winner.username}'
@@ -207,7 +204,7 @@ def not_active(request, listing_id):
     return render(request, 'auctions/not_active.html', context={'message': message})
 
 
-def closing(request, listing_id):
+def closing(request, listing_id: int):
     current_listing = Listing.objects.get(id=listing_id)
     if current_listing.user == request.user:
         current_listing.is_active = False
@@ -217,6 +214,3 @@ def closing(request, listing_id):
         price = max_bid[0]['cost__max']
         return render(request, 'auctions/not_active.html', context={'listings': current_listing,
                                                                     'price': price})
-
-
-

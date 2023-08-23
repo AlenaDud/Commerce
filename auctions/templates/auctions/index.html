@@ -26,7 +26,9 @@
                 {% for card in  listings %}
                     <a href="{% url 'listing_detail' card.pk %}">
                         <div class="card">
-                            <img class="card-img-top" src="{{ card.photo }}" alt="Card image cap">
+                            {% if card.photo %}
+                                <img class="card-img-top" src="{{ card.photo }}" alt="Card image cap">
+                            {% endif %}
                             <div class="card-body">
                                 <h5 class="card-title">{{ card.name }}</h5>
                                 <p class="card-text">{{ card.detail|truncatechars:75 }}</p>

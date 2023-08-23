@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
 
 urlpatterns = [
@@ -17,4 +17,6 @@ urlpatterns = [
     path("create-listing", views.CreateListingView.as_view(), name="create"),
     path("create-listing/successful", views.CreateListingDoneView.as_view()),
     path("listings/<int:listing_id>", views.ListingDetailView.as_view(), name='listing_detail'),
+    path("__debug__/", include("debug_toolbar.urls")),
 ]
+

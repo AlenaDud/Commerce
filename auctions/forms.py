@@ -26,5 +26,3 @@ class BidForms(forms.ModelForm):
         widgets = {
             'cost': forms.TextInput(attrs={'placeholder': 'Bid'})
         }
-
-
